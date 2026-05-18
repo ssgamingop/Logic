@@ -368,20 +368,20 @@
         headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [{ role: "system", content: "You are a helpful study tutor." }, { role: "user", content: prompt }],
-          model: "llama-3.1-8b-instant",
-          temperature: 0.7,
+          model: "llama-3.3-70b-versatile",
+          temperature: 0.2,
           max_tokens: 1024,
         }),
       });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      responseArea.textContent = data.choices?.[0]?.message?.content || "No response received.";
+      let content = data.choices?.[0]?.message?.content || "No response received.";
       
       let autoSelected = false;
-      if (action === 'answer' && window.activeOptionsElements?.length > 0) {
-        const match = responseArea.textContent.match(/Correct Answer:\s*([A-Z])/i);
-        if (match) {
+      if (action === 'answer') {
+        const match = content.match(/Correct Answer:\s*([A-Z])/i);
+        if (match && window.activeOptionsElements?.length > 0) {
            const index = match[1].toUpperCase().charCodeAt(0) - 65;
            if (window.activeOptionsElements[index]) {
                const el = window.activeOptionsElements[index];
@@ -392,7 +392,15 @@
                autoSelected = true;
            }
         }
+        
+        // Hide explanation for 'answer' action
+        const answerLineMatch = content.match(/(Correct Answer:.*)/i);
+        if (answerLineMatch) {
+            content = answerLineMatch[1];
+        }
       }
+      
+      responseArea.textContent = content;
       
       if (!autoSelected) {
         showToast(`Done (${Date.now() - startTime}ms)`, "success");

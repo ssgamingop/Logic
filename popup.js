@@ -350,9 +350,9 @@ function buildPrompt(question, action) {
       `Original Question:\n${question}`,
 
     answer:
-      `You are a knowledgeable tutor. For this MCQ question, respond with ONLY the correct option letter and text. ` +
-      `Format: "Correct Answer: [letter] - [option text]". ` +
-      `If it's not an MCQ, give a brief answer.\n\nQuestion:\n${question}`,
+      `For this MCQ, first think step-by-step to calculate or derive the answer. ` +
+      `Then, at the VERY END of your response, respond with ONLY the correct option letter and text on a new line. ` +
+      `Format: "Correct Answer: [letter] - [option text]".\n\nQuestion:\n${question}`,
   };
 
   return prompts[action] || prompts.explain;
@@ -410,8 +410,8 @@ async function askAI(action) {
             content: prompt
           }
         ],
-        model: "llama-3.1-8b-instant",
-        temperature: 0.7,
+        model: "llama-3.3-70b-versatile",
+        temperature: 0.2,
         max_tokens: 1024,
       }),
     });
@@ -424,7 +424,14 @@ async function askAI(action) {
     const data = await response.json();
     const elapsed = Date.now() - startTime;
 
-    const text = data.choices?.[0]?.message?.content;
+    let text = data.choices?.[0]?.message?.content;
+    
+    if (action === 'answer' && text) {
+      const answerLineMatch = text.match(/(Correct Answer:.*)/i);
+      if (answerLineMatch) {
+          text = answerLineMatch[1];
+      }
+    }
 
     if (text && text.length > 0) {
       responseArea.textContent = text;
