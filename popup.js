@@ -59,6 +59,7 @@ const tabPanels = document.querySelectorAll(".tab-panel");
 // ────────────────────────────────────────────────────────
 const MANUAL_KEY = "savedQuestions";      // Array of objects
 const AUTO_KEY   = "autoSavedQuestions";  // Array of objects
+const GROQ_KEY_STORAGE = "groqApiKey";   // Groq API key
 
 // ────────────────────────────────────────────────────────
 //  TAB NAVIGATION
@@ -124,6 +125,56 @@ function updateBadges() {
 // Update badges on popup open
 updateBadges();
 
+// Load Groq API key from storage
+const apiKeyInput = document.getElementById("groqApiKey");
+const saveApiKeyBtn = document.getElementById("saveApiKey");
+const apiKeyStatus = document.getElementById("apiKeyStatus");
+
+chrome.storage.local.get({ [GROQ_KEY_STORAGE]: "" }, (data) => {
+  if (data[GROQ_KEY_STORAGE]) {
+    apiKeyInput.value = data[GROQ_KEY_STORAGE];
+    apiKeyStatus.textContent = "✓ API key loaded";
+    apiKeyStatus.style.color = "var(--success)";
+  }
+});
+
+saveApiKeyBtn.addEventListener("click", () => {
+  const key = apiKeyInput.value.trim();
+  if (key) {
+    chrome.storage.local.set({ [GROQ_KEY_STORAGE]: key }, () => {
+      apiKeyStatus.textContent = "✓ API key saved!";
+      apiKeyStatus.style.color = "var(--success)";
+      showToast("Groq API key saved!", "success");
+    });
+  } else {
+    showToast("Please enter an API key", "error");
+  }
+});
+
+document.getElementById("openSidePanel").addEventListener("click", () => {
+  try {
+    if (chrome.sidePanel && chrome.sidePanel.open) {
+      chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT })
+        .then(() => {
+          setTimeout(() => window.close(), 100);
+        })
+        .catch((err) => {
+          console.error("SidePanel open failed:", err);
+          // Fallback
+          chrome.windows.create({ url: "popup.html", type: "popup", width: 420, height: 600 });
+          window.close();
+        });
+    } else {
+      // Fallback if API not available
+      chrome.windows.create({ url: "popup.html", type: "popup", width: 420, height: 600 });
+      window.close();
+    }
+  } catch (err) {
+    chrome.windows.create({ url: "popup.html", type: "popup", width: 420, height: 600 });
+    window.close();
+  }
+});
+
 // ────────────────────────────────────────────────────────
 //  1.  FETCH SELECTED TEXT FROM THE ACTIVE TAB
 // ────────────────────────────────────────────────────────
@@ -140,10 +191,18 @@ fetchBtn.addEventListener("click", async () => {
       return;
     }
 
+    if (tab.url.startsWith("chrome://") || tab.url.startsWith("edge://") || tab.url.startsWith("about:")) {
+      showToast("Cannot read internal browser pages.", "error");
+      return;
+    }
+
     // Execute a tiny script in the page to grab selected text
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: () => window.getSelection().toString().trim(),
+    }).catch(err => {
+      console.warn("Script injection blocked:", err.message);
+      return [];
     });
 
     const selectedText = results?.[0]?.result;
@@ -155,8 +214,8 @@ fetchBtn.addEventListener("click", async () => {
       showToast("No text selected on the page.", "error");
     }
   } catch (err) {
-    console.error("Fetch error:", err);
-    showToast("Could not access the page — make sure you're on Crackit.", "error");
+    console.warn("Fetch error:", err.message);
+    showToast("Could not access the page. Try reloading it.", "error");
   }
 });
 
@@ -188,6 +247,11 @@ autoReadBtn.addEventListener("click", async () => {
       return;
     }
 
+    if (tab.url.startsWith("chrome://") || tab.url.startsWith("edge://") || tab.url.startsWith("about:")) {
+      showToast("Cannot read internal browser pages.", "error");
+      return;
+    }
+
     // ── Check if content script is running on this tab ──
     // We ping the content script first to see if it's loaded
     let response;
@@ -209,7 +273,7 @@ autoReadBtn.addEventListener("click", async () => {
       });
     } catch (msgErr) {
       // Content script not running — inject it on the fly
-      console.warn("Content script not found, injecting…", msgErr);
+      console.warn("Content script not found, injecting…", msgErr.message);
       await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         files: ["content.js"],
@@ -252,8 +316,8 @@ autoReadBtn.addEventListener("click", async () => {
         `• Typing the question in the box below`;
     }
   } catch (err) {
-    console.error("Auto-read error:", err);
-    showToast("Could not read the page. Are you on Crackit?", "error");
+    console.warn("Auto-read error:", err.message);
+    showToast("Could not read the page. Are you on a supported page?", "error");
   } finally {
     // Re-enable button
     autoReadBtn.disabled = false;
@@ -282,45 +346,57 @@ function buildPrompt(question, action) {
 
     similar:
       `Generate a similar practice question based on the same concept as the one ` +
-      `below. Include 4 multiple-choice options (A–D) and mark the correct answer ` +
-      `at the end.\n\nOriginal Question:\n${question}`,
+      `below. Include 4 multiple-choice options (A–D). At the end, clearly state: "Correct Answer: [letter]"\n\n` +
+      `Original Question:\n${question}`,
 
     answer:
-      `You are a knowledgeable tutor. Provide the correct answer to this question ` +
-      `with a brief explanation of WHY it is correct. This is for revision and ` +
-      `learning purposes only.\n\nQuestion:\n${question}`,
+      `You are a knowledgeable tutor. For this MCQ question, respond with ONLY the correct option letter and text. ` +
+      `Format: "Correct Answer: [letter] - [option text]". ` +
+      `If it's not an MCQ, give a brief answer.\n\nQuestion:\n${question}`,
   };
 
   return prompts[action] || prompts.explain;
 }
 
 /**
- * Send the question to a free AI API and display the response.
- * Uses the Pollinations AI API (free, no API key required).
- * Docs: https://text.pollinations.ai/
+ * Send the question to Groq AI API and display the response.
+ * Uses Groq's fast LPU for ~500ms response times.
+ * Docs: https://console.groq.com/docs
  *
  * @param {string} action — one of: explain, hint, similar, answer
  */
 async function askAI(action) {
   const question = questionBox.value.trim();
 
-  // Validate
   if (!question) {
     showToast("Please enter or select a question first.", "error");
     return;
   }
 
-  // Show loading state
   responseArea.classList.add("visible");
-  responseArea.innerHTML = `<span class="spinner"></span> Thinking…`;
+  responseArea.innerHTML = `<span class="spinner"></span> Loading from Groq (fast mode)…`;
 
   const prompt = buildPrompt(question, action);
 
   try {
-    // ── Use Pollinations AI (free, no API key needed) ──
-    const response = await fetch("https://text.pollinations.ai/", {
+    const apiKey = await new Promise((resolve) => {
+      chrome.storage.local.get({ [GROQ_KEY_STORAGE]: "" }, (data) => {
+        resolve(data[GROQ_KEY_STORAGE] || "");
+      });
+    });
+
+    if (!apiKey) {
+      responseArea.textContent = "⚠️ No Groq API key set.\n\nPlease enter your Groq API key above to enable fast AI responses.\n\nGet a free key at: https://console.groq.com/keys";
+      showToast("Please add your Groq API key", "error");
+      return;
+    }
+
+    const startTime = Date.now();
+
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
+        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -334,28 +410,34 @@ async function askAI(action) {
             content: prompt
           }
         ],
-        model: "openai",
-        seed: Math.floor(Math.random() * 10000),
+        model: "llama-3.1-8b-instant",
+        temperature: 0.7,
+        max_tokens: 1024,
       }),
     });
 
-    // Pollinations returns plain text directly
-    const text = await response.text();
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error?.message || `API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const elapsed = Date.now() - startTime;
+
+    const text = data.choices?.[0]?.message?.content;
 
     if (text && text.length > 0) {
       responseArea.textContent = text;
       responseArea.scrollTop = 0;
-      showToast("Response ready!", "success");
+      showToast(`Response ready! (${elapsed}ms)`, "success");
     } else {
       responseArea.textContent = "No response received. Please try again.";
       showToast("Empty response — try again.", "error");
     }
   } catch (err) {
-    console.error("AI error:", err);
-
-    // Fallback: generate a local response
+    console.warn("AI error:", err.message);
     responseArea.textContent = generateLocalResponse(question, action);
-    showToast("Using offline study helper.", "info");
+    showToast("API error — using offline helper.", "info");
   }
 }
 

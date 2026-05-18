@@ -49,8 +49,8 @@
     }
 
     body {
-      width: 440px;
-      min-height: 520px;
+      width: 400px;
+      min-height: 580px;
       font-family: var(--font);
       background: var(--bg-primary);
       color: var(--text-primary);
@@ -432,6 +432,7 @@
 
     .saved-item .question-text {
       display: -webkit-box;
+      line-clamp: 3;
       -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
@@ -810,10 +811,29 @@
 
 <body>
   <!-- ========== HEADER ========== -->
-  <div class="header">
-    <h1>📚 Crackit Study Helper <span>v2.0</span></h1>
-    <p>Auto-reads questions — works even when selection is blocked!</p>
+  <div class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;">
+    <div>
+      <h1 style="font-size: 16px;">📚 Crackit Helper <span>v2.1</span></h1>
+      <p style="font-size: 11px;">Now with Groq fast AI!</p>
+    </div>
+    <button id="openSidePanel" style="padding: 6px 12px; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s;">📌 Pin</button>
   </div>
+
+  <!-- Groq API Key Input -->
+  <details style="padding: 10px 20px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); font-size: 11px;">
+    <summary style="cursor: pointer; color: var(--text-muted); font-weight: 500; outline: none;">⚙️ API Settings</summary>
+    <div style="margin-top: 10px; display: flex; gap: 8px; align-items: center;">
+      <input type="password" id="groqApiKey" placeholder="Enter Groq API Key" 
+             style="flex:1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; 
+                    background: var(--bg-card); color: var(--text-primary); font-size: 11px; font-family: var(--font);">
+      <button id="saveApiKey" style="padding: 8px 12px; background: var(--accent); color: #fff; border: none; 
+                                     border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">Save</button>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+      <div id="apiKeyStatus" style="font-size: 10px; color: var(--text-muted);"></div>
+      <div style="font-size: 10px; color: var(--text-muted);">Get free key at <a href="https://console.groq.com/keys" target="_blank" style="color: var(--accent-light);">console.groq.com/keys</a></div>
+    </div>
+  </details>
 
   <!-- ========== TAB NAVIGATION ========== -->
   <div class="tab-nav">
@@ -830,41 +850,29 @@
 
   <!-- ========== TAB 1: STUDY TOOLS ========== -->
   <div id="tab-study" class="tab-panel active">
-
-    <!-- Step 1: Fetch question -->
-    <div class="section-label">Step 1 — Grab a Question</div>
-
-    <!-- AUTO-READ BUTTON (new in v2.0) -->
-    <button id="autoReadBtn" class="btn-auto-read">
-      🚀 Auto-Read &amp; Answer
-    </button>
-
-    <!-- OR divider -->
-    <div class="divider-or">or select text manually</div>
-
-    <button id="fetchBtn" class="btn-fetch">
-      📋 Get Selected Question
-    </button>
+    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+      <button id="autoReadBtn" class="btn-auto-read" style="margin-bottom: 0; flex: 2; padding: 12px;">🚀 Auto-Read</button>
+      <button id="fetchBtn" class="btn-fetch" style="margin-bottom: 0; flex: 1; padding: 12px; font-size: 11px;">📋 Selected Text</button>
+    </div>
 
     <!-- Textarea to display / type the question -->
     <textarea
       id="questionBox"
       class="question-box"
-      placeholder="Select text on the Crackit website, then click the button above — or type a question here…"
+      placeholder="Type a question here or grab it from the page..."
+      style="min-height: 70px; margin-bottom: 12px;"
     ></textarea>
 
-    <!-- Step 2: Actions -->
-    <div class="section-label">Step 2 — Study Tools</div>
+    <!-- Actions -->
     <div class="actions">
-      <button id="explainBtn" class="btn-action btn-explain">💡 Explain Concept</button>
-      <button id="hintBtn"    class="btn-action btn-hint">🔍 Give Hint</button>
-      <button id="similarBtn" class="btn-action btn-similar">🔄 Similar Question</button>
-      <button id="answerBtn"  class="btn-action btn-answer">✅ Get Answer</button>
+      <button id="explainBtn" class="btn-action btn-explain">💡 Explain</button>
+      <button id="hintBtn"    class="btn-action btn-hint">🔍 Hint</button>
+      <button id="similarBtn" class="btn-action btn-similar">🔄 Similar</button>
+      <button id="answerBtn"  class="btn-action btn-answer">✅ Answer</button>
       <button id="saveBtn"    class="btn-action btn-save">🔖 Save for Revision</button>
     </div>
 
     <!-- AI response output -->
-    <div class="section-label">Response</div>
     <div id="responseArea" class="response-area"></div>
   </div>
 
