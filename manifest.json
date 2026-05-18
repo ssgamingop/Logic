@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "ITM Crackit Study Helper",
-  "version": "1.1.0",
-  "description": "A learning companion for ITM Crackit students — get hints, explanations, and revision support for questions.",
+  "version": "2.0.0",
+  "description": "Auto-reads questions from any page (even selection-blocked apps), gets AI answers, saves for revision. Built for ITM Crackit students.",
   "permissions": [
     "activeTab",
     "storage",

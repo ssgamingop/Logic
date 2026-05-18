@@ -23,6 +23,7 @@
 
 // Study Tools tab
 const fetchBtn     = document.getElementById("fetchBtn");
+const autoReadBtn  = document.getElementById("autoReadBtn");
 const questionBox  = document.getElementById("questionBox");
 const explainBtn   = document.getElementById("explainBtn");
 const hintBtn      = document.getElementById("hintBtn");
@@ -156,6 +157,107 @@ fetchBtn.addEventListener("click", async () => {
   } catch (err) {
     console.error("Fetch error:", err);
     showToast("Could not access the page — make sure you're on Crackit.", "error");
+  }
+});
+
+// ────────────────────────────────────────────────────────
+//  1b.  AUTO-READ & ANSWER (NEW in v2.0)
+// ────────────────────────────────────────────────────────
+
+/**
+ * Auto-Read & Answer: sends a message to the content script
+ * asking for the current page question (no text selection needed),
+ * populates the question box, then immediately gets the AI answer.
+ *
+ * Works even on apps that disable text selection / copy-paste.
+ */
+autoReadBtn.addEventListener("click", async () => {
+  // Disable the button to prevent double-click
+  autoReadBtn.disabled = true;
+  autoReadBtn.innerHTML = `<span class="spinner"></span> Reading page…`;
+
+  try {
+    // Get the currently active tab
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+
+    if (!tab) {
+      showToast("No active tab found.", "error");
+      return;
+    }
+
+    // ── Check if content script is running on this tab ──
+    // We ping the content script first to see if it's loaded
+    let response;
+    try {
+      response = await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error("timeout")), 3000);
+        chrome.tabs.sendMessage(
+          tab.id,
+          { action: "GET_CURRENT_QUESTION" },
+          (res) => {
+            clearTimeout(timeout);
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message));
+            } else {
+              resolve(res);
+            }
+          }
+        );
+      });
+    } catch (msgErr) {
+      // Content script not running — inject it on the fly
+      console.warn("Content script not found, injecting…", msgErr);
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ["content.js"],
+      });
+      // Wait a moment for it to initialize, then retry
+      await new Promise((r) => setTimeout(r, 800));
+      response = await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error("timeout")), 3000);
+        chrome.tabs.sendMessage(
+          tab.id,
+          { action: "GET_CURRENT_QUESTION" },
+          (res) => {
+            clearTimeout(timeout);
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message));
+            } else {
+              resolve(res);
+            }
+          }
+        );
+      });
+    }
+
+    const question = response?.question;
+
+    if (question && question.length > 0) {
+      questionBox.value = question;
+      showToast("Question read from page! Getting answer…", "success");
+
+      // Immediately ask AI for the answer
+      await askAI("answer");
+    } else {
+      showToast("Could not find a question on this page.", "error");
+      responseArea.classList.add("visible");
+      responseArea.innerHTML =
+        `⚠️ No question detected on this page.\n\n` +
+        `Try:\n` +
+        `• Navigating to a question page first\n` +
+        `• Using "Get Selected Question" (select text manually)\n` +
+        `• Typing the question in the box below`;
+    }
+  } catch (err) {
+    console.error("Auto-read error:", err);
+    showToast("Could not read the page. Are you on Crackit?", "error");
+  } finally {
+    // Re-enable button
+    autoReadBtn.disabled = false;
+    autoReadBtn.innerHTML = `🚀 Auto-Read &amp; Answer`;
   }
 });
 

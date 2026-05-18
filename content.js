@@ -10,6 +10,9 @@
  *    2. AUTO-SAVE: Uses MutationObserver to detect visible
  *       question text on the page and save it automatically
  *       to chrome.storage.local for revision.
+ *    3. AUTO-READ: Responds to popup messages requesting the
+ *       current question from the page DOM directly —
+ *       works even when text selection is disabled.
  *
  *  IMPORTANT: This does NOT auto-answer questions or bypass
  *  any website security. It only reads visible text for
@@ -223,11 +226,139 @@
   });
 
   // ────────────────────────────────────────────────────────
-  //  3.  CONSOLE LOG
+  //  3.  AUTO-READ: Respond to popup requests (NEW in v2.0)
+  // ────────────────────────────────────────────────────────
+
+  /**
+   * Extended selectors that also capture MCQ options.
+   * Used when the popup asks for the "current question".
+   */
+  const EXTENDED_SELECTORS = [
+    // Specific question text
+    ".question-text", ".question_text", ".question-content",
+    ".question-body", ".question-title", ".quiz-question",
+    ".exam-question", ".qtext", ".que .qtext",
+    // Generic patterns
+    "[class*='question']", "[class*='Question']",
+    "[id*='question']", "[id*='Question']",
+    ".question p", ".que p",
+    // MCQ option containers
+    ".answer", ".option", ".choice", ".answers",
+    "[class*='option']", "[class*='choice']", "[class*='answer']",
+    // Paragraph / list fallbacks
+    "p", "li", "h3", "h4",
+  ];
+
+  /**
+   * Extract the best single "current question" from the page.
+   * Tries to read the longest, most question-like visible text.
+   * Falls back to grabbing any visible readable text block.
+   *
+   * This works even when the site disables copy/select because
+   * we read the DOM directly via innerText.
+   *
+   * @returns {string|null} The extracted question text, or null.
+   */
+  function getCurrentQuestion() {
+    // Priority 1: Try specific question selectors
+    const prioritySelectors = [
+      ".question-text", ".question_text", ".question-content",
+      ".question-body", ".qtext", ".que .qtext",
+      "[class*='question-text']", "[class*='questionText']",
+      "[class*='question_text']",
+      ".question p", ".que p",
+      "[class*='question'] p",
+      "h3", "h4", "h2",
+    ];
+
+    let bestText = null;
+    let bestScore = 0;
+
+    for (const selector of prioritySelectors) {
+      try {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach((el) => {
+          if (el.offsetParent === null) return; // Skip hidden elements
+          const text = el.innerText.trim().replace(/\s+/g, " ");
+          if (text.length >= MIN_QUESTION_LENGTH && text.length > bestScore) {
+            bestScore = text.length;
+            bestText = text;
+          }
+        });
+      } catch { /* ignore invalid selectors */ }
+
+      // If we found something good (>50 chars), stop here
+      if (bestText && bestText.length > 50) break;
+    }
+
+    // Priority 2: If nothing found, grab ALL option texts too
+    // to build a full MCQ question string
+    if (bestText) {
+      const optionSelectors = [
+        ".answer", ".option", ".choice",
+        "[class*='option']", "[class*='choice']", "[class*='answer']",
+        "li",
+      ];
+      let optionsText = "";
+      for (const sel of optionSelectors) {
+        try {
+          const opts = document.querySelectorAll(sel);
+          const optTexts = [];
+          opts.forEach((el) => {
+            if (el.offsetParent === null) return;
+            const t = el.innerText.trim().replace(/\s+/g, " ");
+            if (t.length > 3 && t.length < 300) optTexts.push(t);
+          });
+          if (optTexts.length >= 2 && optTexts.length <= 8) {
+            optionsText = "\n\nOptions:\n" + optTexts.map((t, i) =>
+              `${String.fromCharCode(65 + i)}. ${t}`).join("\n");
+            break;
+          }
+        } catch { /* skip */ }
+      }
+      return bestText + optionsText;
+    }
+
+    // Priority 3: Brute-force — find the longest visible text block
+    const allElements = document.querySelectorAll("p, span, div, h1, h2, h3, h4, li");
+    let longestText = null;
+    let longestLen = MIN_QUESTION_LENGTH;
+
+    allElements.forEach((el) => {
+      // Only leaf-like elements (skip containers with many children)
+      if (el.offsetParent === null) return;
+      if (el.children.length > 5) return;
+      const text = el.innerText.trim().replace(/\s+/g, " ");
+      if (text.length > longestLen && text.length < 1000) {
+        longestLen = text.length;
+        longestText = text;
+      }
+    });
+
+    return longestText;
+  }
+
+  /**
+   * Listen for messages from the popup.
+   * The popup sends { action: "GET_CURRENT_QUESTION" } and
+   * we respond with { question: "..." }.
+   */
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message.action === "GET_CURRENT_QUESTION") {
+      const question = getCurrentQuestion();
+      sendResponse({ question: question || null });
+    }
+    // Must return true for async sendResponse (even though this is sync,
+    // keeping it safe for future async extraction)
+    return true;
+  });
+
+  // ────────────────────────────────────────────────────────
+  //  4.  CONSOLE LOG
   // ────────────────────────────────────────────────────────
 
   console.log(
-    "%c📚 ITM Crackit Study Helper v1.1 is active!",
+    "%c📚 ITM Crackit Study Helper v2.0 is active!",
     "color: #7c5cfc; font-size: 14px; font-weight: bold;"
   );
   console.log(
@@ -235,7 +366,7 @@
     "color: #34d399; font-size: 12px;"
   );
   console.log(
-    "%cSelect any question text, then open the extension popup.",
-    "color: #9ca3af; font-size: 12px;"
+    "%cAuto-Read is ON — popup can read questions even without text selection.",
+    "color: #34d399; font-size: 12px;"
   );
 })();

@@ -648,6 +648,90 @@
     }
 
     /* =============================================
+       AUTO-READ BUTTON
+       ============================================= */
+    .btn-auto-read {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, #f97316 0%, #ef4444 50%, #ec4899 100%);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.2px;
+      box-shadow: 0 4px 20px rgba(249, 115, 22, 0.35);
+    }
+    .btn-auto-read::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .btn-auto-read:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(249, 115, 22, 0.5);
+    }
+    .btn-auto-read:hover::before {
+      opacity: 1;
+    }
+    .btn-auto-read:active {
+      transform: scale(0.97);
+    }
+    .btn-auto-read:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    /* Shimmer sweep on the auto-read button */
+    .btn-auto-read::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+      transition: 0.6s;
+    }
+    .btn-auto-read:hover::after {
+      left: 150%;
+    }
+
+    /* Small divider between auto-read and manual fetch */
+    .divider-or {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .divider-or::before,
+    .divider-or::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* =============================================
        FOOTER
        ============================================= */
     .footer {
@@ -727,8 +811,8 @@
 <body>
   <!-- ========== HEADER ========== -->
   <div class="header">
-    <h1>📚 Crackit Study Helper <span>v1.1</span></h1>
-    <p>Learn smarter — auto-save, hints, explanations &amp; revision</p>
+    <h1>📚 Crackit Study Helper <span>v2.0</span></h1>
+    <p>Auto-reads questions — works even when selection is blocked!</p>
   </div>
 
   <!-- ========== TAB NAVIGATION ========== -->
@@ -749,6 +833,15 @@
 
     <!-- Step 1: Fetch question -->
     <div class="section-label">Step 1 — Grab a Question</div>
+
+    <!-- AUTO-READ BUTTON (new in v2.0) -->
+    <button id="autoReadBtn" class="btn-auto-read">
+      🚀 Auto-Read &amp; Answer
+    </button>
+
+    <!-- OR divider -->
+    <div class="divider-or">or select text manually</div>
+
     <button id="fetchBtn" class="btn-fetch">
       📋 Get Selected Question
     </button>
@@ -799,7 +892,7 @@
 
   <!-- ========== FOOTER ========== -->
   <div class="footer">
-    Built for learning &amp; revision only • Not for live tests
+    Built for learning &amp; revision only • v2.0 • Not for live tests
   </div>
 
   <!-- ========== TOAST ========== -->
