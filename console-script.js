@@ -313,7 +313,7 @@
           });
           if (optTexts.length >= 2 && optTexts.length <= 8) {
             window.activeOptionsElements = optElements;
-            optionsText = "\\n\\nOptions:\\n" + optTexts.map((t, i) => `${String.fromCharCode(65 + i)}. ${t}`).join("\\n");
+            optionsText = "\n\nOptions:\n" + optTexts.map((t, i) => `${String.fromCharCode(65 + i)}. ${t}`).join("\n");
             break;
           }
         } catch {}
@@ -342,10 +342,10 @@
   // AI Prompt Builder
   function buildPrompt(question, action) {
     const prompts = {
-      explain: `You are a helpful tutor. Explain the concept behind this question.\\n\\nQuestion:\\n${question}`,
-      hint: `Give a helpful hint for solving this question WITHOUT giving the answer.\\n\\nQuestion:\\n${question}`,
-      similar: `Generate a similar practice question based on the same concept.\\n\\nOriginal Question:\\n${question}`,
-      answer: `For this MCQ, first think step-by-step to calculate or derive the answer. Then, at the VERY END of your response, respond with ONLY the correct option letter and text on a new line. Format: "Correct Answer: [letter] - [option text]".\\n\\nQuestion:\\n${question}`,
+      explain: `You are a helpful tutor. Explain the concept behind this question.\n\nQuestion:\n${question}`,
+      hint: `Give a helpful hint for solving this question WITHOUT giving the answer.\n\nQuestion:\n${question}`,
+      similar: `Generate a similar practice question based on the same concept.\n\nOriginal Question:\n${question}`,
+      answer: `For this MCQ, first think step-by-step to calculate or derive the answer. Then, at the VERY END of your response, respond with ONLY the correct option letter and text on a new line. Format: "Correct Answer: [letter] - [option text]".\n\nQuestion:\n${question}`,
     };
     return prompts[action] || prompts.explain;
   }
