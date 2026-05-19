@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
       statusEl.className = "status disconnected";
     };
   } catch(e) {
-    statusEl.textContent = "● Desktop App Offline";
+    status.textContent = "● Desktop App Offline";
     statusEl.className = "status disconnected";
   }
 });

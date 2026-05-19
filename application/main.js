@@ -1,4 +1,4 @@
-const { app, BrowserWindow, globalShortcut, clipboard, ipcMain } = require('electron');
+const { app, BrowserWindow, globalShortcut, clipboard, ipcMain, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const WebSocket = require('ws');
 
@@ -31,6 +31,7 @@ ipcMain.on('request-auto-read', () => {
 });
 
 let mainWindow;
+let tray = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -110,6 +111,20 @@ app.whenReady().then(() => {
   if (app.dock) {
     app.dock.hide();
   }
+
+  // Create Tray Icon (Menu Bar)
+  const iconPath = path.join(__dirname, 'build', 'icon.png');
+  const trayIcon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
+  tray = new Tray(trayIcon);
+  
+  const contextMenu = Menu.buildFromTemplate([
+    { label: 'Show Crackit', click: () => { if (!mainWindow || mainWindow.isDestroyed()) createWindow(); else mainWindow.showInactive(); } },
+    { type: 'separator' },
+    { label: 'Quit', click: () => { app.quit(); } }
+  ]);
+  
+  tray.setToolTip('Crackit Study Helper');
+  tray.setContextMenu(contextMenu);
   
   createWindow();
 
