@@ -75,7 +75,7 @@ toggleCompactBtn.addEventListener('click', () => {
   if (isCompact) {
     document.body.classList.add('compact-mode');
     toggleCompactBtn.innerText = 'Expand';
-    ipcRenderer.send('resize-window', { width: 300, height: 180 });
+    ipcRenderer.send('resize-window', { width: 280, height: 160 });
   } else {
     document.body.classList.remove('compact-mode');
     toggleCompactBtn.innerText = 'Compact';

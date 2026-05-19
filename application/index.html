@@ -808,14 +808,21 @@
     }
 
     /* =============================================
-       COMPACT MODE
+       COMPACT MODE (ULTIMATE STEALTH)
        ============================================= */
     body.compact-mode {
       min-height: auto !important;
       height: 100vh;
       overflow: hidden;
+      background: var(--bg-primary);
     }
+    
+    /* Hide everything non-essential */
+    body.compact-mode .header h1,
     body.compact-mode .header p,
+    body.compact-mode .header::before,
+    body.compact-mode .header::after,
+    body.compact-mode #openSidePanel,
     body.compact-mode details,
     body.compact-mode .tab-nav,
     body.compact-mode .btn-auto-read,
@@ -825,11 +832,38 @@
     body.compact-mode .footer {
       display: none !important;
     }
+
+    /* Shrink header to a tiny drag bar */
+    body.compact-mode .header {
+      padding: 6px 10px !important;
+      background: var(--bg-secondary) !important;
+      border-bottom: 1px solid var(--border);
+      justify-content: flex-end !important;
+      -webkit-app-region: drag; /* Allows dragging the window by this bar */
+    }
+
+    /* Make the button tiny and click-through */
+    body.compact-mode #toggleCompactBtn {
+      -webkit-app-region: no-drag;
+      padding: 4px 8px !important;
+      font-size: 10px !important;
+      background: var(--bg-hover) !important;
+      border-color: var(--border) !important;
+    }
+
+    /* Maximize response area and enhance readability */
     body.compact-mode .response-area {
       display: block !important;
-      margin: 10px;
-      height: calc(100vh - 80px);
-      max-height: none;
+      margin: 0 !important;
+      padding: 12px !important;
+      height: calc(100vh - 35px) !important;
+      max-height: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+      font-size: 14px !important; /* Slightly larger text for quick reading */
+      font-weight: 500 !important;
+      color: #fff !important;
+      background: transparent !important;
     }
   </style>
 </head>
