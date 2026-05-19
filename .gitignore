@@ -9,6 +9,7 @@ coverage/
 # Electron / Builds
 application/dist/
 application/build/
+application/node_modules/
 release/
 out/
 *.dmg
