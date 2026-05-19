@@ -1,0 +1,49 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    
+    <!-- Neon Glow Gradient -->
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="50%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+
+    <!-- Drop Shadow -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="15" stdDeviation="15" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+
+    <!-- Outer Glow -->
+    <filter id="neon" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="12" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- App Icon Base (Squircle) -->
+  <rect width="512" height="512" rx="115" fill="url(#bg)" filter="url(#shadow)"/>
+  
+  <!-- Subtle border -->
+  <rect width="508" height="508" x="2" y="2" rx="113" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+
+  <!-- The "C" Shape (Crackit) -->
+  <path d="M 360 160 C 320 120, 260 110, 200 130 C 140 150, 110 210, 110 270 C 110 350, 160 410, 240 420 C 300 430, 350 390, 370 340" 
+        fill="none" 
+        stroke="url(#glow)" 
+        stroke-width="45" 
+        stroke-linecap="round" 
+        filter="url(#neon)"/>
+
+  <!-- The Lightning Bolt -->
+  <path d="M 330 110 L 220 280 L 290 280 L 240 430 L 390 220 L 310 220 Z" 
+        fill="url(#glow)" 
+        filter="url(#neon)"/>
+</svg>
