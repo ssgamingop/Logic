@@ -806,6 +806,31 @@
     .btn-confirm-delete:hover {
       background: #ef4444;
     }
+
+    /* =============================================
+       COMPACT MODE
+       ============================================= */
+    body.compact-mode {
+      min-height: auto !important;
+      height: 100vh;
+      overflow: hidden;
+    }
+    body.compact-mode .header p,
+    body.compact-mode details,
+    body.compact-mode .tab-nav,
+    body.compact-mode .btn-auto-read,
+    body.compact-mode .btn-fetch,
+    body.compact-mode .question-box,
+    body.compact-mode .actions,
+    body.compact-mode .footer {
+      display: none !important;
+    }
+    body.compact-mode .response-area {
+      display: block !important;
+      margin: 10px;
+      height: calc(100vh - 80px);
+      max-height: none;
+    }
   </style>
 </head>
 
@@ -816,7 +841,10 @@
       <h1 style="font-size: 16px;"> Crackit Helper <span>v2.1</span></h1>
       <p style="font-size: 11px;">Now with Groq fast AI!</p>
     </div>
-    <button id="openSidePanel" style="padding: 6px 12px; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s;"> Pin</button>
+    <div style="display: flex; gap: 8px;">
+      <button id="toggleCompactBtn" style="padding: 6px 12px; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s;">Compact</button>
+      <button id="openSidePanel" style="padding: 6px 12px; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s;"> Pin</button>
+    </div>
   </div>
 
   <!-- Groq API Key Input -->

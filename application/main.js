@@ -30,6 +30,12 @@ ipcMain.on('request-auto-read', () => {
   });
 });
 
+ipcMain.on('resize-window', (event, { width, height }) => {
+  if (mainWindow) {
+    mainWindow.setSize(width, height, true);
+  }
+});
+
 let mainWindow;
 let tray = null;
 
@@ -120,7 +126,11 @@ app.whenReady().then(() => {
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Show Crackit', click: () => { if (!mainWindow || mainWindow.isDestroyed()) createWindow(); else mainWindow.showInactive(); } },
     { type: 'separator' },
-    { label: 'Quit', click: () => { app.quit(); } }
+    { label: 'Quit', click: () => { 
+        isQuitting = true;
+        app.quit(); 
+      } 
+    }
   ]);
   
   tray.setToolTip('Crackit Study Helper');
@@ -133,10 +143,23 @@ app.whenReady().then(() => {
   });
 });
 
+let isQuitting = false;
+
+app.on('before-quit', () => {
+  isQuitting = true;
+});
+
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
+  try {
+    wss.close();
+  } catch(e) {}
 });
 
 app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit();
+  // If the user explicitly hits Cmd+Q or Quit from Tray, kill it completely.
+  // Otherwise, let it stay alive in the tray for shortcuts.
+  if (isQuitting || process.platform !== 'darwin') {
+    app.quit();
+  }
 });

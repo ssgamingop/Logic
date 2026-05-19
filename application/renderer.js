@@ -65,6 +65,24 @@ tabBtns.forEach((btn) => {
   });
 });
 
+// ────────────────────────────────────────────────────────
+//  COMPACT MODE
+// ────────────────────────────────────────────────────────
+const toggleCompactBtn = document.getElementById('toggleCompactBtn');
+let isCompact = false;
+toggleCompactBtn.addEventListener('click', () => {
+  isCompact = !isCompact;
+  if (isCompact) {
+    document.body.classList.add('compact-mode');
+    toggleCompactBtn.innerText = 'Expand';
+    ipcRenderer.send('resize-window', { width: 300, height: 180 });
+  } else {
+    document.body.classList.remove('compact-mode');
+    toggleCompactBtn.innerText = 'Compact';
+    ipcRenderer.send('resize-window', { width: 420, height: 650 });
+  }
+});
+
 function showToast(message, type = "info") {
   toast.textContent = message;
   toast.className = `toast ${type} show`;
