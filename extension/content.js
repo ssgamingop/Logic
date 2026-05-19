@@ -369,4 +369,54 @@
     "%cAuto-Read is ON — popup can read questions even without text selection.",
     "color: #34d399; font-size: 12px;"
   );
+  // ────────────────────────────────────────────────────────
+  //  5.  WEBSOCKET CONNECTION TO DESKTOP APP (NEW)
+  // ────────────────────────────────────────────────────────
+  
+  function connectToDesktop() {
+    // Only connect if we are the active document (prevents background tabs from connecting unnecessarily)
+    if (document.visibilityState !== 'visible') {
+      return;
+    }
+
+    try {
+      const ws = new WebSocket('ws://localhost:31415');
+      
+      ws.onmessage = (event) => {
+        if (event.data === 'READ') {
+          // Only the currently active, visible tab should respond
+          if (document.visibilityState === 'visible') {
+            const question = getCurrentQuestion();
+            ws.send(question || "null");
+          }
+        }
+      };
+
+      ws.onclose = () => {
+        // Try to reconnect if connection lost, but only if still visible
+        if (document.visibilityState === 'visible') {
+          setTimeout(connectToDesktop, 3000);
+        }
+      };
+      
+      ws.onerror = () => {
+        // Silently fail if desktop app is not running
+      };
+    } catch (err) {
+      // Ignore
+    }
+  }
+
+  // Connect when visible
+  if (document.visibilityState === 'visible') {
+    connectToDesktop();
+  }
+
+  // Reconnect if user switches back to this tab
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      connectToDesktop();
+    }
+  });
+
 })();

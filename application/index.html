@@ -1,42 +1,924 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Crackit Desktop Helper</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ITM Crackit Study Helper</title>
+
+  <!-- Google Font: Inter for clean modern look -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    /* =============================================
+       ROOT VARIABLES — easy to tweak the palette
+       ============================================= */
+    :root {
+      --bg-primary: #0f1117;
+      --bg-secondary: #1a1d27;
+      --bg-card: #22252f;
+      --bg-hover: #2c303c;
+      --accent: #7c5cfc;
+      --accent-light: #9b82fc;
+      --accent-glow: rgba(124, 92, 252, 0.25);
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
+      --info-blue: #3b82f6;
+      --text-primary: #e8eaed;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --border: #2e3240;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --font: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* =============================================
+       RESET & BASE
+       ============================================= */
+    *,
+    *::before,
+    *::after {
       margin: 0;
-      padding: 20px;
-      background-color: #1e1e1e;
-      color: #ffffff;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 400px;
+      min-height: 580px;
+      font-family: var(--font);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 10px;
+    }
+
+    /* =============================================
+       HEADER
+       ============================================= */
+    .header {
+      background: linear-gradient(135deg, var(--accent) 0%, #6344e0 100%);
+      padding: 20px 22px 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative circles */
+    .header::before {
+      content: "";
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      top: -40px;
+      right: -20px;
+    }
+    .header::after {
+      content: "";
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.04);
+      bottom: -10px;
+      left: 30px;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      position: relative;
+      z-index: 1;
+    }
+    .header h1 span {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.18);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-left: 8px;
+      vertical-align: middle;
+      letter-spacing: 0.5px;
+    }
+    .header p {
+      font-size: 12px;
+      opacity: 0.85;
+      margin-top: 4px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* =============================================
+       TAB NAVIGATION
+       ============================================= */
+    .tab-nav {
       display: flex;
-      flex-direction: column;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 11px 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      gap: 5px;
+    }
+    .tab-btn:hover {
+      color: var(--text-secondary);
+      background: var(--bg-hover);
+    }
+    .tab-btn.active {
+      color: var(--accent-light);
+    }
+    .tab-btn.active::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 15%;
+      width: 70%;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 2px 2px 0 0;
+    }
+
+    /* Badge counter on tab */
+    .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 9px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .tab-badge.empty {
+      background: var(--border);
+      color: var(--text-muted);
+    }
+
+    /* Tab panels */
+    .tab-panel {
+      display: none;
+      padding: 16px 18px 22px;
+      animation: fadeSlideUp 0.25s ease;
+    }
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* =============================================
+       MAIN CONTENT
+       ============================================= */
+
+    /* --- Section labels --- */
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-label::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* --- Get Selected Question button --- */
+    .btn-fetch {
+      width: 100%;
+      padding: 12px;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .btn-fetch:hover {
+      border-color: var(--accent);
+      color: var(--accent-light);
+      background: rgba(124, 92, 252, 0.06);
+    }
+    .btn-fetch:active {
+      transform: scale(0.98);
+    }
+
+    /* --- Textarea --- */
+    .question-box {
+      width: 100%;
+      min-height: 90px;
+      padding: 12px 14px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 13px;
+      line-height: 1.55;
+      resize: vertical;
+      transition: var(--transition);
+      margin-bottom: 14px;
+    }
+    .question-box::placeholder {
+      color: var(--text-muted);
+    }
+    .question-box:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    /* --- Action buttons grid --- */
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .btn-action {
+      padding: 10px 10px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Shimmer on hover */
+    .btn-action::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.08),
+        transparent
+      );
+      transition: 0.5s;
+    }
+    .btn-action:hover::after {
+      left: 100%;
+    }
+
+    .btn-action:active {
+      transform: scale(0.96);
+    }
+
+    /* Button variants */
+    .btn-explain {
+      background: linear-gradient(135deg, #7c5cfc, #6344e0);
+      color: #fff;
+    }
+    .btn-hint {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+    }
+    .btn-similar {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+    }
+    .btn-answer {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+    }
+    .btn-save {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      grid-column: 1 / -1;
+    }
+    .btn-save:hover {
+      border-color: var(--accent);
+      background: var(--bg-hover);
+    }
+
+    /* --- Response area --- */
+    .response-area {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      min-height: 80px;
+      max-height: 260px;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      display: none;
+    }
+    .response-area.visible {
+      display: block;
+      animation: fadeSlideUp 0.3s ease;
+    }
+
+    /* =============================================
+       SAVED QUESTIONS (Manual + Auto)
+       ============================================= */
+
+    /* --- Toolbar row for Clear / Export --- */
+    .saved-toolbar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .btn-toolbar {
+      flex: 1;
+      padding: 9px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .btn-toolbar:hover {
+      border-color: var(--accent);
+      color: var(--accent-light);
+      background: var(--bg-hover);
+    }
+    .btn-toolbar.danger:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* --- Saved item card --- */
+    .saved-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      padding-right: 36px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+      position: relative;
+      transition: var(--transition);
+    }
+    .saved-item:hover {
+      border-color: var(--accent);
+    }
+
+    .saved-item .question-text {
+      display: -webkit-box;
+      line-clamp: 3;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .saved-item .meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    .saved-item .meta-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+    .meta-tag.auto {
+      background: rgba(52, 211, 153, 0.12);
+      color: var(--success);
+    }
+    .meta-tag.manual {
+      background: rgba(124, 92, 252, 0.12);
+      color: var(--accent-light);
+    }
+    .meta-tag.date {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--info-blue);
+    }
+    .meta-tag.url-tag {
+      background: rgba(251, 191, 36, 0.1);
+      color: var(--warning);
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .saved-item .delete-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 22px;
+      height: 22px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(248, 113, 113, 0.12);
+      color: var(--danger);
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+    .saved-item .delete-btn:hover {
+      background: rgba(248, 113, 113, 0.25);
+    }
+
+    .saved-item .item-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .saved-item .load-btn,
+    .saved-item .ask-btn {
+      padding: 4px 10px;
+      border: none;
+      border-radius: 4px;
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .saved-item .load-btn {
+      background: var(--accent);
+      color: #fff;
+    }
+    .saved-item .load-btn:hover {
+      background: var(--accent-light);
+    }
+    .saved-item .ask-btn {
+      background: var(--bg-hover);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .saved-item .ask-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent-light);
+    }
+
+    /* --- Saved list container --- */
+    .saved-list-container {
+      max-height: 380px;
+      overflow-y: auto;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 0;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .empty-state .icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    .empty-state p {
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    /* =============================================
+       STATUS INDICATOR (auto-save status)
+       ============================================= */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 14px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* =============================================
+       TOAST NOTIFICATION
+       ============================================= */
+    .toast {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 500;
+      color: #fff;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition);
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .toast.success {
+      background: var(--success);
+    }
+    .toast.error {
+      background: var(--danger);
+    }
+    .toast.info {
+      background: var(--accent);
+    }
+
+    /* =============================================
+       LOADING SPINNER
+       ============================================= */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    /* =============================================
+       ANIMATIONS
+       ============================================= */
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* =============================================
+       AUTO-READ BUTTON
+       ============================================= */
+    .btn-auto-read {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, #f97316 0%, #ef4444 50%, #ec4899 100%);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.2px;
+      box-shadow: 0 4px 20px rgba(249, 115, 22, 0.35);
+    }
+    .btn-auto-read::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .btn-auto-read:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(249, 115, 22, 0.5);
+    }
+    .btn-auto-read:hover::before {
+      opacity: 1;
+    }
+    .btn-auto-read:active {
+      transform: scale(0.97);
+    }
+    .btn-auto-read:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    /* Shimmer sweep on the auto-read button */
+    .btn-auto-read::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+      transition: 0.6s;
+    }
+    .btn-auto-read:hover::after {
+      left: 150%;
+    }
+
+    /* Small divider between auto-read and manual fetch */
+    .divider-or {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .divider-or::before,
+    .divider-or::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* =============================================
+       FOOTER
+       ============================================= */
+    .footer {
+      text-align: center;
+      padding: 10px 0 14px;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+    }
+    .footer a {
+      color: var(--accent-light);
+      text-decoration: none;
+    }
+
+    /* =============================================
+       CONFIRM DIALOG OVERLAY
+       ============================================= */
+    .confirm-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+    }
+    .confirm-overlay.visible {
+      display: flex;
+    }
+    .confirm-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      max-width: 320px;
       text-align: center;
     }
-    h1 {
-      color: #61dafb;
+    .confirm-box p {
+      font-size: 13px;
+      color: var(--text-primary);
+      margin-bottom: 6px;
     }
-    .status {
-      padding: 10px 20px;
-      background-color: rgba(97, 218, 251, 0.1);
-      border: 1px solid #61dafb;
-      border-radius: 8px;
-      margin-top: 20px;
+    .confirm-box .sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+    .confirm-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    .confirm-actions button {
+      padding: 8px 20px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-cancel {
+      background: var(--bg-hover);
+      color: var(--text-secondary);
+    }
+    .btn-confirm-delete {
+      background: var(--danger);
+      color: #fff;
+    }
+    .btn-confirm-delete:hover {
+      background: #ef4444;
     }
   </style>
 </head>
+
 <body>
-  <h1>Crackit Desktop Helper</h1>
-  <p>This window is completely hidden from screen recording and screenshots.</p>
-  <div class="status">
-    Status: Protected 🛡️
+  <!-- ========== HEADER ========== -->
+  <div class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;">
+    <div>
+      <h1 style="font-size: 16px;"> Crackit Helper <span>v2.1</span></h1>
+      <p style="font-size: 11px;">Now with Groq fast AI!</p>
+    </div>
+    <button id="openSidePanel" style="padding: 6px 12px; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s;"> Pin</button>
   </div>
-  <p style="margin-top: 40px; font-size: 14px; opacity: 0.7;">
-    Note: Try taking a screenshot or recording the screen. This window will appear completely blank or transparent to the capturing software.
-  </p>
+
+  <!-- Groq API Key Input -->
+  <details style="padding: 10px 20px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); font-size: 11px;">
+    <summary style="cursor: pointer; color: var(--text-muted); font-weight: 500; outline: none;">️ API Settings</summary>
+    <div style="margin-top: 10px; display: flex; gap: 8px; align-items: center;">
+      <input type="password" id="groqApiKey" placeholder="Enter Groq API Key" 
+             style="flex:1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; 
+                    background: var(--bg-card); color: var(--text-primary); font-size: 11px; font-family: var(--font);">
+      <button id="saveApiKey" style="padding: 8px 12px; background: var(--accent); color: #fff; border: none; 
+                                     border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">Save</button>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+      <div id="apiKeyStatus" style="font-size: 10px; color: var(--text-muted);"></div>
+      <div style="font-size: 10px; color: var(--text-muted);">Get free key at <a href="https://console.groq.com/keys" target="_blank" style="color: var(--accent-light);">console.groq.com/keys</a></div>
+    </div>
+  </details>
+
+  <!-- ========== TAB NAVIGATION ========== -->
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="study">
+       Study Tools
+    </button>
+    <button class="tab-btn" data-tab="manual-saved">
+       Manual <span id="manualBadge" class="tab-badge empty">0</span>
+    </button>
+    <button class="tab-btn" data-tab="auto-saved">
+       Auto-Saved <span id="autoBadge" class="tab-badge empty">0</span>
+    </button>
+  </div>
+
+  <!-- ========== TAB 1: STUDY TOOLS ========== -->
+  <div id="tab-study" class="tab-panel active">
+    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+      <button id="scanScreenBtn" class="btn-auto-read" style="margin-bottom: 0; flex: 2; padding: 12px;"> Scan Screen</button>
+      <button id="fetchBtn" class="btn-fetch" style="margin-bottom: 0; flex: 1; padding: 12px; font-size: 11px;"> Get from Clipboard</button>
+    </div>
+
+    <!-- Textarea to display / type the question -->
+    <textarea
+      id="questionBox"
+      class="question-box"
+      placeholder="Type a question here or grab it from the page..."
+      style="min-height: 70px; margin-bottom: 12px;"
+    ></textarea>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button id="explainBtn" class="btn-action btn-explain"> Explain</button>
+      <button id="hintBtn"    class="btn-action btn-hint"> Hint</button>
+      <button id="similarBtn" class="btn-action btn-similar"> Similar</button>
+      <button id="answerBtn"  class="btn-action btn-answer"> Answer</button>
+      <button id="saveBtn"    class="btn-action btn-save"> Save for Revision</button>
+    </div>
+
+    <!-- AI response output -->
+    <div id="responseArea" class="response-area"></div>
+  </div>
+
+  <!-- ========== TAB 2: MANUAL SAVED ========== -->
+  <div id="tab-manual-saved" class="tab-panel">
+    <div class="saved-toolbar">
+      <button id="clearManualBtn" class="btn-toolbar danger">️ Clear All</button>
+      <button id="exportManualBtn" class="btn-toolbar"> Export JSON</button>
+    </div>
+    <div id="manualSavedList" class="saved-list-container"></div>
+  </div>
+
+  <!-- ========== TAB 3: AUTO-SAVED ========== -->
+  <div id="tab-auto-saved" class="tab-panel">
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      Auto-save is active — questions are captured automatically when you browse Crackit.
+    </div>
+    <div class="saved-toolbar">
+      <button id="clearAutoBtn" class="btn-toolbar danger">️ Clear All</button>
+      <button id="exportAutoBtn" class="btn-toolbar"> Export JSON</button>
+    </div>
+    <div id="autoSavedList" class="saved-list-container"></div>
+  </div>
+
+  <!-- ========== FOOTER ========== -->
+  <div class="footer">
+    Built for learning &amp; revision only • v2.0 • Not for live tests
+  </div>
+
+  <!-- ========== TOAST ========== -->
+  <div id="toast" class="toast"></div>
+
+  <!-- ========== CONFIRM DIALOG ========== -->
+  <div id="confirmOverlay" class="confirm-overlay">
+    <div class="confirm-box">
+      <p>️ Clear all questions?</p>
+      <div class="sub">This action cannot be undone.</div>
+      <div class="confirm-actions">
+        <button id="confirmCancel" class="btn-cancel">Cancel</button>
+        <button id="confirmDelete" class="btn-confirm-delete">Delete All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup logic -->
+  <script src="renderer.js"></script>
 </body>
 </html>

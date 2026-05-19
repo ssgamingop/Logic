@@ -1,49 +1,41 @@
-# 📚 ITM Crackit Study Helper
+# Crackit Study Helper
 
-A powerful, AI-driven study assistant designed to help students learn, understand, and solve academic questions instantly. Built as both a full **Chrome Extension** and a portable **Console Script**, this tool seamlessly integrates with Learning Management Systems (LMS), custom test sites, and platforms like Kahoot.
+A multi-client, stealthy AI study helper designed for ultimate reliability and invisibility. The project is split into three main components based on the user's operational needs.
 
-## ✨ Features
+## Architecture & Ecosystem
 
-* **🧠 Groq-Powered AI (Llama 3.3 70B):** Uses the most advanced open-source AI model available, running on lightning-fast LPU hardware for instant responses.
-* **🚀 Auto-Read & Auto-Select:** Automatically extracts questions from the webpage, sends them to the AI, and **automatically clicks the correct multiple-choice option** for you.
-* **🕵️ Hidden Chain of Thought:** For complex questions, the AI silently thinks step-by-step to calculate the correct answer mathematically before outputting only the final answer—giving you maximum accuracy without screen clutter.
-* **💡 Explain, Hint, & Similar:** Provides detailed conceptual explanations, helpful hints that don't give away the answer, and generates similar practice questions.
-* **🎨 Beautiful UI:** Features a sleek, draggable floating widget (console script) or an organized popup (extension) with dark mode and glassmorphic elements.
-* **🛡️ Stealth & Sandboxed:** Uses Shadow DOM in the console script version to ensure the widget's styling never conflicts with the host website.
+### 1. The Stealth Desktop Client (`/application`)
+A standalone Electron desktop application engineered to be completely invisible to screen recording and proctoring software.
+- **Stealth Features**: Uses `setContentProtection(true)` to hide the window from screen recordings/sharing. Does not steal focus from the browser.
+- **Seamless Shortcuts**: Use global keyboard shortcuts (`Cmd+Shift+E`, `Cmd+Shift+C`) to extract text and answer questions without losing window focus.
+- **WebSocket Server**: Runs a local WebSocket server to receive extracted questions directly from the Chrome extension.
+- **Build Instructions**: 
+  - Install dependencies: `npm install`
+  - Run locally: `npm start`
+  - Build for Mac: `npm run build:mac`
+  - Build for Win: `npm run build:win`
 
-## 🛠️ Installation
+### 2. The DOM Extractor (`/extension`)
+A lightweight Chrome Extension that serves as the bridge between locked-down web pages and the Stealth Desktop Client.
+- **Silent DOM Reading**: Injects a content script that pulls the inner text of multiple-choice questions natively, bypassing copy-paste restrictions and without capturing visual screenshots.
+- **Zero UI Overhead**: Offloads all logic and API keys to the Desktop app. It simply checks the connection and acts as an invisible WebSocket client.
+- **Installation**: Load `extension/` as an unpacked extension in Chrome via `chrome://extensions/`.
 
-### Option 1: Chrome Extension
-1. Download or clone this repository.
-2. Open Google Chrome and navigate to `chrome://extensions/`.
-3. Enable **"Developer mode"** in the top right corner.
-4. Click **"Load unpacked"** and select the folder containing this repository.
-5. Pin the extension to your toolbar and enter your Groq API Key!
+### 3. The Mobile Web Client (`/webapp`)
+A 100% physically detached solution for environments where running an Electron app is impossible.
+- **Mobile First**: Built with React and Vite. Open this on your mobile phone and point your camera at your screen.
+- **Vision AI**: Uses Groq's Vision API (`llama-3.2-11b-vision-preview`) to run OCR and solve questions from your mobile device camera in real-time.
+- **No Permissions Needed**: Bypasses all PC-based proctoring mechanisms because it runs on a completely separate device.
+- **Run Locally**:
+  - `cd webapp`
+  - `npm install`
+  - `npm run dev`
 
-### Option 2: Portable Console Script
-Don't want to install an extension? No problem! 
-1. Open `console-script.js`.
-2. Copy the entire file content.
-3. Open your browser's Developer Tools (F12 or `Ctrl+Shift+I` / `Cmd+Option+I`) on any test site.
-4. Go to the **Console** tab, paste the code, and press Enter.
-5. The draggable helper widget will instantly appear on the page!
+### 4. Injection Scripts (`console-script.js`)
+A raw JavaScript snippet that can be pasted directly into a browser's Developer Tools Console to inject a floating AI widget onto the screen. This is an alternative to the Extension/Desktop setup.
 
-## 🚀 How to Use Auto-Select
-1. Make sure you have saved your **Groq API Key** (get one for free at [console.groq.com](https://console.groq.com)).
-2. On any test site, click the **"🚀 Auto-Read"** button in the extension or console widget.
-3. The script will automatically locate the question and options on the screen.
-4. The AI will calculate the answer and the script will **automatically select the correct radio button**!
-
-## 🧪 Test Environment
-This repository includes a built-in `test_site` folder to test the Auto-Select features safely.
-1. Open `test_site/index.html` in your browser.
-2. Run the `console-script.js` code in the Developer Tools console.
-3. Click Auto-Read and watch it solve the Data Structures & Algorithms quiz!
-
-## ⚙️ Architecture & Tech Stack
-* **HTML/CSS/JS (Vanilla):** No bulky frameworks, ensuring maximum performance and zero dependency overhead.
-* **Manifest V3:** Adheres to the latest Chrome extension security protocols, including `<all_urls>` permission scoping.
-* **Groq API Integration:** Direct REST API calls to Groq's inference engine for near-zero latency generation.
-
-## 📝 Disclaimer
-This tool is built for educational and studying purposes. Please adhere to your institution's academic integrity guidelines when using AI-assisted study tools.
+## Built With
+- **Electron JS**
+- **React / Vite**
+- **Groq AI (Llama 3.3 70B & 3.2 Vision 11B)**
+- **Vanilla Glassmorphic CSS**
